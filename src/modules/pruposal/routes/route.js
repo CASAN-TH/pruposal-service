@@ -16,6 +16,9 @@ module.exports = function (app) {
 
     app.param('pruposalId', controller.getByID);
 
+    app.route("/api/v1/pruposals/upload")
+    .post(controller.upload);
+
     /**
      * Message Queue
      * exchange : ชื่อเครือข่ายไปรษณีย์  เช่น casan

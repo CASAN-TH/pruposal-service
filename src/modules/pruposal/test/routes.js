@@ -94,7 +94,7 @@ describe("Pruposal CRUD routes tests", function() {
             var resp = res.body;
             assert.equal(resp.status, 200);
             assert.equal(resp.data.name, mockup.name);
-            assert.equal(resp.data.indicator, mockup.indicator)
+            assert.equal(resp.data.indicator, mockup.indicator);
             done();
           });
       });
@@ -238,5 +238,34 @@ describe("Pruposal CRUD routes tests", function() {
 
   afterEach(function(done) {
     Pruposal.deleteMany().exec(done);
+  });
+});
+
+describe("Upload with DOCX file", function() {
+  const filePath = `${__dirname}/testFiles/test.doc`;
+  console.log(filePath);
+  before(function(done) {
+    done();
+  });
+
+  it("should be upload old prup document", function(done) {
+    request(app)
+      .post("/api/v1/pruposals/upload")
+      .set("Content-Type", "multipart/form-data")
+      // Attach the file with key 'file' which is corresponding to your endpoint setting.
+      .attach("file", filePath)
+      .expect(200)
+      .end(function(err, res) {
+        if (err) {
+            console.log(err);
+          return done(err);
+        }
+        assert.equal(res.body.data.owner,"ชื่อ-นามสกุล\tนายอุทัย เตียนพลกรัง\nตำแหน่ง\t\tผู้อำนวยการศูนย์อำนวยการน้ำแห่งชาติ\nสังกัด\tสำนักงานทรัพยากรน้ำแห่งชาติ\nโทรศัพท์เคลื่อนที่\t0-2521-9141\nE-mail address\tnwcc.onwr@gmail.com\n\n");
+        done();
+      });
+  });
+
+  afterEach(function(done) {
+    done();
   });
 });
