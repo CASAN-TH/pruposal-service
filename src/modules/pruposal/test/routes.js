@@ -14,10 +14,12 @@ describe("Pruposal CRUD routes tests", function() {
   before(function(done) {
     mockup = {
       name: "โครงการจัดทำผังน้ำ ลุ่มน้ำชี",
-      plancode: "00",
-      projectcode: "00000",
+      compcode: "01035",
+      deptcode: "1111",
+      plancode: "49",
+      projectcode: "49003",
       activitycode: "0000000",
-      sourcecode: "00",
+      sourcecode: "12",
       owner:
         "ชื่อ-นามสกุล\tนายอุทัย เตียนพลกรัง\nตำแหน่ง\t\tผู้อำนวยการศูนย์อำนวยการน้ำแห่งชาติ\nสังกัด\tสำนักงานทรัพยากรน้ำแห่งชาติ\nโทรศัพท์เคลื่อนที่\t0-2521-9141\nE-mail address\tnwcc.onwr@gmail.com\n\n",
       criteria:
@@ -94,7 +96,7 @@ describe("Pruposal CRUD routes tests", function() {
             var resp = res.body;
             assert.equal(resp.status, 200);
             assert.equal(resp.data.name, mockup.name);
-            assert.equal(resp.data.indicator, mockup.indicator);
+            assert.equal(resp.data.budgetcodetmp, "010354900312XXXX");
             done();
           });
       });
@@ -257,10 +259,13 @@ describe("Upload with DOCX file", function() {
       .expect(200)
       .end(function(err, res) {
         if (err) {
-            console.log(err);
+          console.log(err);
           return done(err);
         }
-        assert.equal(res.body.data.owner,"ชื่อ-นามสกุล\tนายอุทัย เตียนพลกรัง\nตำแหน่ง\t\tผู้อำนวยการศูนย์อำนวยการน้ำแห่งชาติ\nสังกัด\tสำนักงานทรัพยากรน้ำแห่งชาติ\nโทรศัพท์เคลื่อนที่\t0-2521-9141\nE-mail address\tnwcc.onwr@gmail.com\n\n");
+        assert.equal(
+          res.body.data.owner,
+          "ชื่อ-นามสกุล\tนายอุทัย เตียนพลกรัง\nตำแหน่ง\t\tผู้อำนวยการศูนย์อำนวยการน้ำแห่งชาติ\nสังกัด\tสำนักงานทรัพยากรน้ำแห่งชาติ\nโทรศัพท์เคลื่อนที่\t0-2521-9141\nE-mail address\tnwcc.onwr@gmail.com\n\n"
+        );
         done();
       });
   });
