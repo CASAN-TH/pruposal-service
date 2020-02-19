@@ -90,7 +90,13 @@ var PruposalSchema = new Schema({
 //generate budgetcode tempolary before saving it to the database
 PruposalSchema.pre("save", function(next) {
   var pruposal = this;
-  pruposal.budgetcodetmp = `${pruposal.compcode}${pruposal.projectcode}${pruposal.sourcecode}XXXX`;
+  var prefix = `${pruposal.compcode}${pruposal.projectcode}${pruposal.sourcecode}`;
+  // pruposal.find(function(err, data) {
+  //   console.log("sdasd");
+
+  // });
+  
+  pruposal.budgetcodetmp = `${prefix}XXXX`;
   next();
 });
 mongoose.model("Pruposal", PruposalSchema);

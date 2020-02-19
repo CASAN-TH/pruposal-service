@@ -245,7 +245,6 @@ describe("Pruposal CRUD routes tests", function() {
 
 describe("Upload with DOCX file", function() {
   const filePath = `${__dirname}/testFiles/test.doc`;
-  console.log(filePath);
   before(function(done) {
     done();
   });
