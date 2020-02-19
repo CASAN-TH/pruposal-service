@@ -3,8 +3,8 @@ var controller = require('../controllers/controller'),
     mq = require('../../core/controllers/rabbitmq'),
     policy = require('../policy/policy');
 module.exports = function (app) {
-    var url = '/api/pruposals';
-    var urlWithParam = '/api/pruposals/:pruposalId';
+    var url = '/api/proposals';
+    var urlWithParam = '/api/proposals/:proposalId';
     app.route(url).all(policy.isAllowed)
         .get(controller.getList)
         .post(controller.create);
@@ -14,11 +14,10 @@ module.exports = function (app) {
         .put(controller.update)
         .delete(controller.delete);
 
-    app.param('pruposalId', controller.getByID);
+    app.param('proposalId', controller.getByID);
 
-    app.route("/api/v1/pruposals/upload")
+    app.route("/api/v1/proposals/upload")
     .post(controller.upload);
-
     /**
      * Message Queue
      * exchange : ชื่อเครือข่ายไปรษณีย์  เช่น casan

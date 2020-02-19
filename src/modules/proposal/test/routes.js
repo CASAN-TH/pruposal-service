@@ -6,11 +6,11 @@ var request = require("supertest"),
   jwt = require("jsonwebtoken"),
   mongoose = require("mongoose"),
   app = require("../../../config/express"),
-  Pruposal = mongoose.model("Pruposal");
+  Proposal = mongoose.model("Proposal");
 
 var credentials, token, mockup;
 
-describe("Pruposal CRUD routes tests", function() {
+describe("Proposal CRUD routes tests", function() {
   before(function(done) {
     mockup = {
       name: "โครงการจัดทำผังน้ำ ลุ่มน้ำชี",
@@ -44,7 +44,15 @@ describe("Pruposal CRUD routes tests", function() {
       benefit: "1. กรรมการกำกับดูแลทางด้านวิชาการ\n2. กรรมการตรวจรับพัสดุ\n\n",
       indicator:
         "ใช้ผังน้ำประกอบการวางแผนบริหารจัดการทรัพยากรน้ำอย่างเป็นระบบ\n\n\n",
-      status: "draf"
+      status: "draf",
+      activities: [
+        {
+          name: "test",
+          expenses: [
+            { code: "00", name: "sds", description: "ddd", amount: 100 }
+          ]
+        }
+      ]
     };
     credentials = {
       username: "username",
@@ -60,9 +68,9 @@ describe("Pruposal CRUD routes tests", function() {
     done();
   });
 
-  it("should be Pruposal get use token", done => {
+  it("should be Proposal get use token", done => {
     request(app)
-      .get("/api/pruposals")
+      .get("/api/proposals")
       .set("Authorization", "Bearer " + token)
       .expect(200)
       .end((err, res) => {
@@ -74,9 +82,9 @@ describe("Pruposal CRUD routes tests", function() {
       });
   });
 
-  it("should be Pruposal get by id", function(done) {
+  it("should be Proposal get by id", function(done) {
     request(app)
-      .post("/api/pruposals")
+      .post("/api/proposals")
       .set("Authorization", "Bearer " + token)
       .send(mockup)
       .expect(200)
@@ -86,7 +94,7 @@ describe("Pruposal CRUD routes tests", function() {
         }
         var resp = res.body;
         request(app)
-          .get("/api/pruposals/" + resp.data._id)
+          .get("/api/proposals/" + resp.data._id)
           .set("Authorization", "Bearer " + token)
           .expect(200)
           .end(function(err, res) {
@@ -102,9 +110,9 @@ describe("Pruposal CRUD routes tests", function() {
       });
   });
 
-  it("should be Pruposal post use token", done => {
+  it("should be Proposal post use token", done => {
     request(app)
-      .post("/api/pruposals")
+      .post("/api/proposals")
       .set("Authorization", "Bearer " + token)
       .send(mockup)
       .expect(200)
@@ -118,9 +126,9 @@ describe("Pruposal CRUD routes tests", function() {
       });
   });
 
-  it("should be pruposal put use token", function(done) {
+  it("should be proposal put use token", function(done) {
     request(app)
-      .post("/api/pruposals")
+      .post("/api/proposals")
       .set("Authorization", "Bearer " + token)
       .send(mockup)
       .expect(200)
@@ -133,7 +141,7 @@ describe("Pruposal CRUD routes tests", function() {
           name: "name update"
         };
         request(app)
-          .put("/api/pruposals/" + resp.data._id)
+          .put("/api/proposals/" + resp.data._id)
           .set("Authorization", "Bearer " + token)
           .send(update)
           .expect(200)
@@ -148,9 +156,9 @@ describe("Pruposal CRUD routes tests", function() {
       });
   });
 
-  it("should be pruposal delete use token", function(done) {
+  it("should be proposal delete use token", function(done) {
     request(app)
-      .post("/api/pruposals")
+      .post("/api/proposals")
       .set("Authorization", "Bearer " + token)
       .send(mockup)
       .expect(200)
@@ -160,16 +168,16 @@ describe("Pruposal CRUD routes tests", function() {
         }
         var resp = res.body;
         request(app)
-          .delete("/api/pruposals/" + resp.data._id)
+          .delete("/api/proposals/" + resp.data._id)
           .set("Authorization", "Bearer " + token)
           .expect(200)
           .end(done);
       });
   });
 
-  it("should be pruposal get not use token", done => {
+  it("should be proposal get not use token", done => {
     request(app)
-      .get("/api/pruposals")
+      .get("/api/proposals")
       .expect(403)
       .expect({
         status: 403,
@@ -178,9 +186,9 @@ describe("Pruposal CRUD routes tests", function() {
       .end(done);
   });
 
-  it("should be pruposal post not use token", function(done) {
+  it("should be proposal post not use token", function(done) {
     request(app)
-      .post("/api/pruposals")
+      .post("/api/proposals")
       .send(mockup)
       .expect(403)
       .expect({
@@ -190,9 +198,9 @@ describe("Pruposal CRUD routes tests", function() {
       .end(done);
   });
 
-  it("should be pruposal put not use token", function(done) {
+  it("should be proposal put not use token", function(done) {
     request(app)
-      .post("/api/pruposals")
+      .post("/api/proposals")
       .set("Authorization", "Bearer " + token)
       .send(mockup)
       .expect(200)
@@ -205,7 +213,7 @@ describe("Pruposal CRUD routes tests", function() {
           name: "name update"
         };
         request(app)
-          .put("/api/pruposals/" + resp.data._id)
+          .put("/api/proposals/" + resp.data._id)
           .send(update)
           .expect(403)
           .expect({
@@ -216,9 +224,9 @@ describe("Pruposal CRUD routes tests", function() {
       });
   });
 
-  it("should be pruposal delete not use token", function(done) {
+  it("should be proposal delete not use token", function(done) {
     request(app)
-      .post("/api/pruposals")
+      .post("/api/proposals")
       .set("Authorization", "Bearer " + token)
       .send(mockup)
       .expect(200)
@@ -228,7 +236,7 @@ describe("Pruposal CRUD routes tests", function() {
         }
         var resp = res.body;
         request(app)
-          .delete("/api/pruposals/" + resp.data._id)
+          .delete("/api/proposals/" + resp.data._id)
           .expect(403)
           .expect({
             status: 403,
@@ -239,37 +247,37 @@ describe("Pruposal CRUD routes tests", function() {
   });
 
   afterEach(function(done) {
-    Pruposal.deleteMany().exec(done);
+    Proposal.deleteMany().exec(done);
   });
 });
 
 describe("Upload with DOCX file", function() {
-  const filePath = `${__dirname}/testFiles/test.doc`;
-  before(function(done) {
-    done();
+    const filePath = `${__dirname}/testFiles/test.doc`;
+    before(function(done) {
+      done();
+    });
+  
+    it("should be upload old prup document", function(done) {
+      request(app)
+        .post("/api/v1/proposals/upload")
+        .set("Content-Type", "multipart/form-data")
+        // Attach the file with key 'file' which is corresponding to your endpoint setting.
+        .attach("file", filePath)
+        .expect(200)
+        .end(function(err, res) {
+          if (err) {
+            console.log(err);
+            return done(err);
+          }
+          assert.equal(
+            res.body.data.owner,
+            "ชื่อ-นามสกุล\tนายอุทัย เตียนพลกรัง\nตำแหน่ง\t\tผู้อำนวยการศูนย์อำนวยการน้ำแห่งชาติ\nสังกัด\tสำนักงานทรัพยากรน้ำแห่งชาติ\nโทรศัพท์เคลื่อนที่\t0-2521-9141\nE-mail address\tnwcc.onwr@gmail.com\n\n"
+          );
+          done();
+        });
+    });
+  
+    afterEach(function(done) {
+      done();
+    });
   });
-
-  it("should be upload old prup document", function(done) {
-    request(app)
-      .post("/api/v1/pruposals/upload")
-      .set("Content-Type", "multipart/form-data")
-      // Attach the file with key 'file' which is corresponding to your endpoint setting.
-      .attach("file", filePath)
-      .expect(200)
-      .end(function(err, res) {
-        if (err) {
-          console.log(err);
-          return done(err);
-        }
-        assert.equal(
-          res.body.data.owner,
-          "ชื่อ-นามสกุล\tนายอุทัย เตียนพลกรัง\nตำแหน่ง\t\tผู้อำนวยการศูนย์อำนวยการน้ำแห่งชาติ\nสังกัด\tสำนักงานทรัพยากรน้ำแห่งชาติ\nโทรศัพท์เคลื่อนที่\t0-2521-9141\nE-mail address\tnwcc.onwr@gmail.com\n\n"
-        );
-        done();
-      });
-  });
-
-  afterEach(function(done) {
-    done();
-  });
-});
