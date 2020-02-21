@@ -129,76 +129,94 @@ exports.delete = function(req, res) {
 };
 
 exports.upload = function(req, res) {
-    const upload = multer({ storage }).single("file");
-    upload(req, res, function(err) {
-      if (err) {
-        return res.send(err);
-      }
-      const path = req.file.path;
-      // console.log(path);
-      var extractor = new WordExtractor();
-      var extracted = extractor.extract(path);
-      extracted.then(function(doc) {
-        var body = doc.getBody();
-        var topics = body
-          .replace("1. ชื่อโครงการ  : ", ";")
-          .replace("2. ผู้รับผิดชอบ  : \n", ";")
-          .replace("3. หลักการและเหตุผล \n", ";")
-          .replace("4. วัตถุประสงค์\n", ";")
-          .replace(
-            "5. ความสอดคล้อง/ความสัมพันธ์กับนโยบายรัฐบาล แผนแม่บทชาติ ยุทธศาสตร์การจัดสรรงบประมาณ\n",
-            ";"
-          )
-          .replace(
-            "6. ความสอดคล้องกับยุทธศาสตร์ เป้าหมายการให้บริการ กลยุทธ์ของสำนักงานทรัพยากรน้ำแห่งชาติ\n",
-            ";"
-          )
-          .replace("7. พื้นที่ดำเนินโครงการ\n", ";")
-          .replace("8. กลุ่มเป้าหมาย ผู้มีส่วนได้ส่วนเสีย\n", ";")
-          .replace("9. ระยะเวลาดำเนินโครงการ\n", ";")
-          .replace(
-            "10. แผนการปฏิบัติงาน/วิธีการดำเนินงาน/กิจกรรม (โดยละเอียด)\n",
-            ";"
-          )
-          .replace("11. ผลการดำเนินงานที่ผ่านมา (ถ้ามี)\n", ";")
-          .replace("12. งบประมาณ และแผนการใช้จ่ายงบประมาณ \n", ";")
-          .replace(
-            "13.\tผลผลิตของแผนงาน/โครงการ (Output) และตัวชี้วัดของโครงการ\n",
-            ";"
-          )
-          .replace("14. ผลลัพธ์/ผลสัมฤทธิ์ของแผนงาน/โครงการ (Outcome)\n", ";")
-          .replace("15. ผลประโยชน์/ผลกระทบที่คาดว่าจะได้รับ\n", ";")
-          .replace("16. การติดตามและประเมินผลโครงการ\n", ";")
-          .replace("*****************************************\n", ";")
-          .split(";");
-        var jsondoc = {
-          name: topics[1].replace("\n", "").replace("\n", ""),
-          plancode: "00",
-          projectcode: "00000",
-          activitycode: "0000000",
-          sourcecode: "00",
-          owner: topics[2],
-          criteria: topics[3],
-          objectives: topics[4],
-          relatetostrategyoutside: topics[5],
-          relatetostrategyinside: topics[6],
-          location: topics[7],
-          targetgroup: topics[8],
-          timeline: topics[9],
-          process: topics[10],
-          resulthistory: topics[11],
-          budgetpaln: topics[12].toString(),
-          output: topics[13],
-          outcome: topics[14],
-          benefit: topics[15],
-          indicator: topics[16],
-          status: "draf"
-        };
+  const upload = multer({ storage }).single("file");
+  upload(req, res, function(err) {
+    if (err) {
+      return res.send(err);
+    }
+    const path = req.file.path;
+    // console.log(path);
+    var extractor = new WordExtractor();
+    var extracted = extractor.extract(path);
+    extracted.then(function(doc) {
+      var body = doc.getBody();
+      var topics = body
+        .replace("1. ชื่อโครงการ  : ", ";")
+        .replace("2. ผู้รับผิดชอบ  : \n", ";")
+        .replace("3. หลักการและเหตุผล \n", ";")
+        .replace("4. วัตถุประสงค์\n", ";")
+        .replace(
+          "5. ความสอดคล้อง/ความสัมพันธ์กับนโยบายรัฐบาล แผนแม่บทชาติ ยุทธศาสตร์การจัดสรรงบประมาณ\n",
+          ";"
+        )
+        .replace(
+          "6. ความสอดคล้องกับยุทธศาสตร์ เป้าหมายการให้บริการ กลยุทธ์ของสำนักงานทรัพยากรน้ำแห่งชาติ\n",
+          ";"
+        )
+        .replace("7. พื้นที่ดำเนินโครงการ\n", ";")
+        .replace("8. กลุ่มเป้าหมาย ผู้มีส่วนได้ส่วนเสีย\n", ";")
+        .replace("9. ระยะเวลาดำเนินโครงการ\n", ";")
+        .replace(
+          "10. แผนการปฏิบัติงาน/วิธีการดำเนินงาน/กิจกรรม (โดยละเอียด)\n",
+          ";"
+        )
+        .replace("11. ผลการดำเนินงานที่ผ่านมา (ถ้ามี)\n", ";")
+        .replace("12. งบประมาณ และแผนการใช้จ่ายงบประมาณ \n", ";")
+        .replace(
+          "13.\tผลผลิตของแผนงาน/โครงการ (Output) และตัวชี้วัดของโครงการ\n",
+          ";"
+        )
+        .replace("14. ผลลัพธ์/ผลสัมฤทธิ์ของแผนงาน/โครงการ (Outcome)\n", ";")
+        .replace("15. ผลประโยชน์/ผลกระทบที่คาดว่าจะได้รับ\n", ";")
+        .replace("16. การติดตามและประเมินผลโครงการ\n", ";")
+        .replace("*****************************************\n", ";")
+        .split(";");
+
+      // console.log(topics);
+      var jsondoc = {
+        name: topics[1].replace("\n", "").replace("\n", ""),
+        startdate: null,
+        enddate: null,
+        budgetyear: null,
+        budgetsummary: null,
+        budgetinyear: null,
+        compcode: "01035",
+        deptcode: "01035",
+        plancode: "00",
+        projectcode: "00000",
+        activitycode: "0000000",
+        sourcecode: "00",
+        owner: convertToHtml(topics[2]),
+        criteria: convertToHtml(topics[3]),
+        objectives: convertToHtml(topics[4]),
+        relatetostrategyoutside: convertToHtml(topics[5]),
+        relatetostrategyinside: convertToHtml(topics[6]),
+        location: convertToHtml(topics[7]),
+        targetgroup: convertToHtml(topics[8]),
+        timeline: convertToHtml(topics[9]),
+        process: convertToHtml(topics[10]),
+        resulthistory: convertToHtml(topics[11]),
+        budgetpaln: topics[12].toString(),
+        output: convertToHtml(topics[13]),
+        outcome: convertToHtml(topics[14]),
+        benefit: convertToHtml(topics[15]),
+        indicator: convertToHtml(topics[16]),
+        status: "initial"
+      };
       //   console.log(JSON.stringify(jsondoc));
-        res.jsonp({
-          status: 200,
-          data: jsondoc
-        });
+      res.jsonp({
+        status: 200,
+        data: jsondoc
       });
     });
-  };
+  });
+};
+
+function convertToHtml(richText) {
+  var result = "";
+  if (!richText) return result;
+  richText.split("\n").forEach(line => {
+    result += `<p>${line.replace("\t", "&nbsp;&nbsp;&nbsp;&nbsp;")}</p>`;
+  });
+  return result;
+}

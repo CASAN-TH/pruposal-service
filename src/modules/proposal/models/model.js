@@ -9,6 +9,11 @@ var ProposalSchema = new Schema({
         type: String,
         required: "Please fill a Pruposal name"
       },
+      startdate:Date,
+      enddate:Date,
+      budgetyear:Number,
+      budgetsummary:Number,
+      budgetinyear:Number,
       compcode: String,
       deptcode: String,
       plancode: String,
