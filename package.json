@@ -15,14 +15,20 @@
   "dependencies": {
     "acl": "^0.4.11",
     "amqplib": "^0.5.3",
+    "aws-sdk": "^2.625.0",
+    "cloudinary": "^1.19.0",
     "cors": "^2.8.4",
     "death": "^1.1.0",
+    "docx": "^5.0.2",
+    "docx-extractor": "^1.1.5",
     "express": "^4.16.3",
     "express-jwt": "5.3.0",
     "glob": "^7.1.2",
     "lodash": "^4.17.5",
     "mongoose": "^5.0.12",
     "multer": "^1.4.2",
+    "textract": "^2.5.0",
+    "uuid": "^7.0.0",
     "word-extractor": "^0.3.0"
   },
   "devDependencies": {

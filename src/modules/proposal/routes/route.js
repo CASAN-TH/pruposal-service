@@ -7,11 +7,11 @@ module.exports = function (app) {
     var urlWithParam = '/api/proposals/:proposalId';
     app.route(url).all(policy.isAllowed)
         .get(controller.getList)
-        .post(controller.create);
+        .post(controller.createFile001AndUpload,controller.createFile003AndUpload, controller.create);
 
     app.route(urlWithParam).all(policy.isAllowed)
         .get(controller.read)
-        .put(controller.update)
+        .put(controller.createFile001AndUpload,controller.createFile002AndUpload,controller.createFile003AndUpload, controller.update)
         .delete(controller.delete);
 
     app.param('proposalId', controller.getByID);
