@@ -16,21 +16,23 @@ const {
   Document,
   Packer,
   Paragraph,
-  Header,
   TextRun,
+  UnderlineType,
+  AlignmentType,
   HeadingLevel,
-  VerticalAlign,
-  Media
+  Header,
+  Footer,
+  PageNumber
 } = docx;
 
 const cloudinary = require("../../../config/cloudinary").cloudinary;
 
 const AWS = require("aws-sdk");
 const s3 = new AWS.S3({
-  accessKeyId: process.env.AWS_ACCESS_KEY || "AKIAJFWOFVYYQBMWVRUA",
+  accessKeyId: process.env.AWS_ACCESS_KEY || "AKIAIXFJDIEMNFVWOBAA",
   secretAccessKey:
     process.env.AWS_SECRET_ACCESS_KEY ||
-    "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"
+    "ruph73aKvMfMBsINxK5Lge8Bi3ISnYJrSzCEIclA"
 });
 
 const WordExtractor = require("word-extractor");
@@ -163,707 +165,1280 @@ exports.upload = function(req, res) {
     }
     // console.log(req.file);
     const path = req.file.path;
+    const uuid1 = new Date().getTime();
 
-    textract.fromFileWithPath(path, { preserveLineBreaks: true }, function(
-      error,
-      text
-    ) {
-      console.log(text);
-      var topics = text
-        .replace("1. ชื่อโครงการ : ", ";")
-        .replace("2. ผู้รับผิดชอบ : \n", ";")
-        .replace("3. หลักการและเหตุผล \n", ";")
-        .replace("4. วัตถุประสงค์\n", ";")
-        .replace(
-          "5. ความสอดคล้อง/ความสัมพันธ์กับนโยบายรัฐบาล แผนแม่บทชาติ ยุทธศาสตร์การจัดสรรงบประมาณ\n",
-          ";"
-        )
-        .replace(
-          "6. ความสอดคล้องกับยุทธศาสตร์ เป้าหมายการให้บริการ กลยุทธ์ของสำนักงานทรัพยากรน้ำแห่งชาติ\n",
-          ";"
-        )
-        .replace("7. พื้นที่ดำเนินโครงการ\n", ";")
-        .replace("8. กลุ่มเป้าหมาย ผู้มีส่วนได้ส่วนเสีย\n", ";")
-        .replace("9. ระยะเวลาดำเนินโครงการ\n", ";")
-        .replace(
-          "10. แผนการปฏิบัติงาน/วิธีการดำเนินงาน/กิจกรรม (โดยละเอียด)\n",
-          ";"
-        )
-        .replace("11. ผลการดำเนินงานที่ผ่านมา (ถ้ามี)\n", ";")
-        .replace("12. งบประมาณ และแผนการใช้จ่ายงบประมาณ \n", ";")
-        .replace(
-          "13. ผลผลิตของแผนงาน/โครงการ (Output) และตัวชี้วัดของโครงการ\n",
-          ";"
-        )
-        .replace("14. ผลลัพธ์/ผลสัมฤทธิ์ของแผนงาน/โครงการ (Outcome)\n", ";")
-        .replace("15. ผลประโยชน์/ผลกระทบที่คาดว่าจะได้รับ\n", ";")
-        .replace("16. การติดตามและประเมินผลโครงการ\n", ";")
-        .replace("*****************************************\n", ";")
-        .split(";");
-      // console.log(topics);
-      var jsondoc = {
-        name: topics[1].replace("\n", "").replace("\n", ""),
-        startdate: null,
-        enddate: null,
-        budgetyear: null,
-        budgetsummary: null,
-        budgetinyear: null,
-        compcode: "01035",
-        deptcode: "01035",
-        plancode: "00",
-        projectcode: "00000",
-        activitycode: "0000000",
-        sourcecode: "00",
-        owner: convertToHtml(topics[2]),
-        criteria: convertToHtml(topics[3]),
-        objectives: convertToHtml(topics[4]),
-        relatetostrategyoutside: convertToHtml(topics[5]),
-        relatetostrategyinside: convertToHtml(topics[6]),
-        location: convertToHtml(topics[7]),
-        targetgroup: convertToHtml(topics[8]),
-        timeline: convertToHtml(topics[9]),
-        process: convertToHtml(topics[10]),
-        resulthistory: convertToHtml(topics[11]),
-        budgetpaln: "รายละเอียดแผนการใช้จ่ายงบประมาณตามแบบฟอร์ม กผง.002", //convertToHtml(topics[12]),
-        output: convertToHtml(topics[13]),
-        outcome: convertToHtml(topics[14]),
-        benefit: convertToHtml(topics[15]),
-        indicator: convertToHtml(topics[16]),
-        status: "initial"
-      };
-      // console.log(JSON.stringify(jsondoc));
-      res.jsonp({
-        status: 200,
-        data: jsondoc
+    const params = {
+      Bucket: "test-001-01", // pass your bucket name
+      Key: "กผง-001-" + uuid1 + ".doc", // file will be saved as testBucket/contacts.csv
+      Body: fs.createReadStream(path),
+      ACL: "public-read"
+    };
+    s3.upload(params, function(s3Err, data) {
+      if (s3Err) throw s3Err;
+      textract.fromFileWithPath(path, { preserveLineBreaks: true }, function(
+        error,
+        text
+      ) {
+        var topics = text
+          .replace("1. ชื่อโครงการ : ", ";")
+          .replace("2. ผู้รับผิดชอบ : ", ";")
+          .replace("3. หลักการและเหตุผล", ";")
+          .replace("4. วัตถุประสงค์", ";")
+          .replace(
+            "5. ความสอดคล้อง/ความสัมพันธ์กับนโยบายรัฐบาล แผนแม่บทชาติ ยุทธศาสตร์การจัดสรรงบประมาณ",
+            ";"
+          )
+          .replace(
+            "6. ความสอดคล้องกับยุทธศาสตร์ เป้าหมายการให้บริการ กลยุทธ์ของสำนักงานทรัพยากรน้ำแห่งชาติ",
+            ";"
+          )
+          .replace("7. พื้นที่ดำเนินโครงการ", ";")
+          .replace("8. กลุ่มเป้าหมาย ผู้มีส่วนได้ส่วนเสีย", ";")
+          .replace("9. ระยะเวลาดำเนินโครงการ", ";")
+          .replace(
+            "10. แผนการปฏิบัติงาน/วิธีการดำเนินงาน/กิจกรรม (โดยละเอียด)",
+            ";"
+          )
+          .replace("11. ผลการดำเนินงานที่ผ่านมา (ถ้ามี)", ";")
+          .replace("12. งบประมาณ และแผนการใช้จ่ายงบประมาณ", ";")
+          .replace(
+            "13. ผลผลิตของแผนงาน/โครงการ (Output) และตัวชี้วัดของโครงการ\n",
+            ";"
+          )
+          .replace("14. ผลลัพธ์/ผลสัมฤทธิ์ของแผนงาน/โครงการ (Outcome)", ";")
+          .replace("15. ผลประโยชน์/ผลกระทบที่คาดว่าจะได้รับ", ";")
+          .replace("16. การติดตามและประเมินผลโครงการ", ";")
+          .replace("*****************************************", ";")
+          .split(";");
+        // console.log(topics);
+        var jsondoc = {
+          name: topics[1].replace("\n", "").replace("\n", ""),
+          startdate: null,
+          enddate: null,
+          budgetyear: 2563,
+          budgetsummary: null,
+          budgetinyear: null,
+          compcode: "01035",
+          deptcode: null,
+          plancode: null,
+          projectcode: null,
+          activitycode: null,
+          sourcecode: null,
+          owner: convertToHtml(topics[2]),
+          criteria: convertToHtml(topics[3]),
+          objectives: convertToHtml(topics[4]),
+          relatetostrategyoutside: convertToHtml(topics[5]),
+          relatetostrategyinside: convertToHtml(topics[6]),
+          location: convertToHtml(topics[7]),
+          targetgroup: convertToHtml(topics[8]),
+          timeline: convertToHtml(topics[9]),
+          process: convertToHtml(topics[10]),
+          resulthistory: convertToHtml(topics[11]),
+          budgetpaln: "รายละเอียดแผนการใช้จ่ายงบประมาณตามแบบฟอร์ม กผง.002", //convertToHtml(topics[12]),
+          output: convertToHtml(topics[13]),
+          outcome: convertToHtml(topics[14]),
+          benefit: convertToHtml(topics[15]),
+          indicator: convertToHtml(topics[16]),
+          status: "initial",
+          file001Url: data.Location
+        };
+        // console.log(JSON.stringify(jsondoc));
+        res.jsonp({
+          status: 200,
+          data: jsondoc
+        });
       });
     });
-    // var extractor = new WordExtractor();
-    // var extracted = extractor.extract(path);
-    // extracted.then(function(doc) {
-    //   var body = doc.getBody();
-    //   var topics = body
-    //     .replace("1. ชื่อโครงการ  : ", ";")
-    //     .replace("2. ผู้รับผิดชอบ  : \n", ";")
-    //     .replace("3. หลักการและเหตุผล \n", ";")
-    //     .replace("4. วัตถุประสงค์\n", ";")
-    //     .replace(
-    //       "5. ความสอดคล้อง/ความสัมพันธ์กับนโยบายรัฐบาล แผนแม่บทชาติ ยุทธศาสตร์การจัดสรรงบประมาณ\n",
-    //       ";"
-    //     )
-    //     .replace(
-    //       "6. ความสอดคล้องกับยุทธศาสตร์ เป้าหมายการให้บริการ กลยุทธ์ของสำนักงานทรัพยากรน้ำแห่งชาติ\n",
-    //       ";"
-    //     )
-    //     .replace("7. พื้นที่ดำเนินโครงการ\n", ";")
-    //     .replace("8. กลุ่มเป้าหมาย ผู้มีส่วนได้ส่วนเสีย\n", ";")
-    //     .replace("9. ระยะเวลาดำเนินโครงการ\n", ";")
-    //     .replace(
-    //       "10. แผนการปฏิบัติงาน/วิธีการดำเนินงาน/กิจกรรม (โดยละเอียด)\n",
-    //       ";"
-    //     )
-    //     .replace("11. ผลการดำเนินงานที่ผ่านมา (ถ้ามี)\n", ";")
-    //     .replace("12. งบประมาณ และแผนการใช้จ่ายงบประมาณ \n", ";")
-    //     .replace(
-    //       "13.\tผลผลิตของแผนงาน/โครงการ (Output) และตัวชี้วัดของโครงการ\n",
-    //       ";"
-    //     )
-    //     .replace("14. ผลลัพธ์/ผลสัมฤทธิ์ของแผนงาน/โครงการ (Outcome)\n", ";")
-    //     .replace("15. ผลประโยชน์/ผลกระทบที่คาดว่าจะได้รับ\n", ";")
-    //     .replace("16. การติดตามและประเมินผลโครงการ\n", ";")
-    //     .replace("*****************************************\n", ";")
-    //     .split(";");
-
-    //   // console.log(topics);
-    //   var jsondoc = {
-    //     name: topics[1].replace("\n", "").replace("\n", ""),
-    //     startdate: null,
-    //     enddate: null,
-    //     budgetyear: null,
-    //     budgetsummary: null,
-    //     budgetinyear: null,
-    //     compcode: "01035",
-    //     deptcode: "01035",
-    //     plancode: "00",
-    //     projectcode: "00000",
-    //     activitycode: "0000000",
-    //     sourcecode: "00",
-    //     owner: convertToHtml(topics[2]),
-    //     criteria: convertToHtml(topics[3]),
-    //     objectives: convertToHtml(topics[4]),
-    //     relatetostrategyoutside: convertToHtml(topics[5]),
-    //     relatetostrategyinside: convertToHtml(topics[6]),
-    //     location: convertToHtml(topics[7]),
-    //     targetgroup: convertToHtml(topics[8]),
-    //     timeline: convertToHtml(topics[9]),
-    //     process: convertToHtml(topics[10]),
-    //     resulthistory: convertToHtml(topics[11]),
-    //     budgetpaln: "รายละเอียดแผนการใช้จ่ายงบประมาณตามแบบฟอร์ม กผง.002", //convertToHtml(topics[12]),
-    //     output: convertToHtml(topics[13]),
-    //     outcome: convertToHtml(topics[14]),
-    //     benefit: convertToHtml(topics[15]),
-    //     indicator: convertToHtml(topics[16]),
-    //     status: "initial"
-    //   };
-    //   //   console.log(JSON.stringify(jsondoc));
-    //   res.jsonp({
-    //     status: 200,
-    //     data: jsondoc
-    //   });
-    // });
   });
 };
 
 exports.createFile001AndUpload = async function(req, res, next) {
-  // console.log(req.body);
+  console.log(req.body);
   var docxData001 = req.body;
-  const doc = new Document();
-  // if (payload.file001Url) next();
-  doc.addSection({
-    headers: {
-      default: new Header({
-        children: [
-          new Paragraph(
-            "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t          แบบฟอร์ม กผง.001"
-          )
-        ]
+  if (docxData001.file001Url) {
+    console.log(docxData001.file001Url);
+    next();
+  } else {
+    const child = [];
+    child.push(
+      new Paragraph({
+        text:
+          "ข้อเสนอโครงการที่จะเสนอขอตั้งงบประมาณรายจ่ายประจำปีงบประมาณ พ.ศ. 2563 สำนักงานทรัพยากรน้ำแห่งชาติ",
+        style: "heading-center"
       })
-    },
-
-    children: [
+    );
+    child.push(
+      new Paragraph({
+        children: []
+      })
+    );
+    child.push(
       new Paragraph({
         children: [
           new TextRun({
-            text:
-              "\t\t ข้อเสนอโครงการที่จะเสนอขอตั้งงบประมาณรายจ่ายประจำปีงบประมาณ พ.ศ. 2563 สำนักงานทรัพยากรน้ำแห่งชาติ \n",
-            heading: HeadingLevel.HEADING_2,
-            bold: true
-          })
-        ]
-      }),
-      new Paragraph({
-        children: []
-      }),
-      new Paragraph({
-        children: []
-      }),
-      new Paragraph({
-        children: [
-          new TextRun({
-            text: "1. ชื่อโครงการ : ",
+            text: "1. ชื่อโครงการ  :  ",
             bold: true
           }),
           new TextRun({
             text: docxData001.name
           })
-        ]
-      }),
-      new Paragraph({
-        children: []
-      }),
-      new Paragraph({
-        children: [
-          new TextRun({
-            text: "ผู้รับผิดชอบ :\t",
-            bold: true
-          })
-        ]
-      }),
-      new Paragraph({
-        children: [
-          new TextRun({
-            text: docxData001.owner
-          })
-        ]
-      }),
-      new Paragraph({
-        children: []
-      }),
-      new Paragraph({
-        children: [
-          new TextRun({
-            text: "หลักการและเหตุผล\t",
-            bold: true
-          })
-        ]
-      }),
-      new Paragraph({
-        children: [
-          new TextRun({
-            text: docxData001.criteria
-          })
-        ]
-      }),
-      new Paragraph({
-        children: []
-      }),
-      new Paragraph({
-        children: [
-          new TextRun({
-            text: "วัตถุประสงค์\t",
-            bold: true
-          })
-        ]
-      }),
-      new Paragraph({
-        children: [
-          new TextRun({
-            text: docxData001.objectives
-          })
-        ]
-      }),
-      new Paragraph({
-        children: []
-      }),
-      new Paragraph({
-        children: [
-          new TextRun({
-            text: "พื้นที่ดำเนินโครงการ\t",
-            bold: true
-          })
-        ]
-      }),
-      new Paragraph({
-        children: [
-          new TextRun({
-            text: docxData001.location
-          })
-        ]
-      }),
-      new Paragraph({
-        children: []
-      }),
-      new Paragraph({
-        children: [
-          new TextRun({
-            text: "กลุ่มเป้าหมาย ผู้มีส่วนได้ส่วนเสีย\t",
-            bold: true
-          })
-        ]
-      }),
-      new Paragraph({
-        children: [
-          new TextRun({
-            text: docxData001.targetgroup
-          })
-        ]
-      }),
-      new Paragraph({
-        children: []
-      }),
-      new Paragraph({
-        children: [
-          new TextRun({
-            text: "ระยะเวลาดำเนินโครงการ\t",
-            bold: true
-          })
-        ]
-      }),
-      new Paragraph({
-        children: [
-          new TextRun({
-            text: docxData001.timeline
-          })
-        ]
-      }),
-      new Paragraph({
-        children: []
-      }),
-      new Paragraph({
-        children: [
-          new TextRun({
-            text: "แผนการปฏิบัติงาน/วิธีการดำเนินงาน/กิจกรรม (โดยละเอียด)\t",
-            bold: true
-          })
-        ]
-      }),
-      new Paragraph({
-        children: [
-          new TextRun({
-            text: docxData001.process
-          })
-        ]
-      }),
-      new Paragraph({
-        children: []
-      }),
-      new Paragraph({
-        children: [
-          new TextRun({
-            text: "ผลการดำเนินงานที่ผ่านมา (ถ้ามี)\t",
-            bold: true
-          })
-        ]
-      }),
-      new Paragraph({
-        children: [
-          new TextRun({
-            text: docxData001.resulthistory
-          })
-        ]
-      }),
-      new Paragraph({
-        children: []
-      }),
-      new Paragraph({
-        children: [
-          new TextRun({
-            text: "งบประมาณ และแผนการใช้จ่ายงบประมาณ\t",
-            bold: true
-          })
-        ]
-      }),
-      new Paragraph({
-        children: [
-          new TextRun({
-            text: docxData001.budgetpaln
-          })
-        ]
-      }),
-      new Paragraph({
-        children: []
-      }),
-      new Paragraph({
-        children: [
-          new TextRun({
-            text: "ผลผลิตของแผนงาน/โครงการ (Output) และตัวชี้วัดของโครงการ\t",
-            bold: true
-          })
-        ]
-      }),
-      new Paragraph({
-        children: [
-          new TextRun({
-            text: docxData001.output
-          })
-        ]
-      }),
-      new Paragraph({
-        children: []
-      }),
-      new Paragraph({
-        children: [
-          new TextRun({
-            text: "ผลลัพธ์/ผลสัมฤทธิ์ของแผนงาน/โครงการ (Outcome)\t",
-            bold: true
-          })
-        ]
-      }),
-      new Paragraph({
-        children: [
-          new TextRun({
-            text: docxData001.outcome
-          })
-        ]
-      }),
-      new Paragraph({
-        children: []
-      }),
-      new Paragraph({
-        children: [
-          new TextRun({
-            text: "ผลประโยชน์/ผลกระทบที่คาดว่าจะได้รับ\t",
-            bold: true
-          })
-        ]
-      }),
-      new Paragraph({
-        children: [
-          new TextRun({
-            text: docxData001.benefit
-          })
-        ]
-      }),
-      new Paragraph({
-        children: []
-      }),
-      new Paragraph({
-        children: [
-          new TextRun({
-            text: "การติดตามและประเมินผลโครงการ\t",
-            bold: true
-          })
-        ]
-      }),
-      new Paragraph({
-        children: [
-          new TextRun({
-            text: docxData001.indicator
-          })
-        ]
+        ],
+        style: "format-title"
       })
-    ]
-  });
+    );
+    /** 2. ผู้รับผิดชอบ */
+    child.push(
+      new Paragraph({
+        children: [
+          new TextRun({
+            text: "2. ผู้รับผิดชอบ  : ",
+            bold: true
+          })
+        ],
+        style: "format-title"
+      })
+    );
+    if (docxData001.owner)
+      docxData001.owner.split("<p>").forEach(function(owner) {
+        var txt = owner
+          .replace("\t\t\t", "*")
+          .replace("\t\t", "*")
+          .replace("\t", "*")
+          .replace("&nbsp;&nbsp;&nbsp;&nbsp;", "\t")
+          .replace("</p>", "")
+          .replace("*", "\t\t");
 
-  const documentBuffer = await Packer.toBase64String(doc);
-  let buff = new Buffer(documentBuffer, "base64");
-  // var date1 = Date.now();
-  var uuid1 = new Date().getTime();
+        if (txt !== "") {
+          child.push(
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: txt
+                })
+              ],
+              style: "format-subtitle"
+            })
+          );
+        }
+      });
 
-  const params = {
-    Bucket: "test-001-01", // pass your bucket name
-    Key: "กผง-001-" + uuid1 + ".doc", // file will be saved as testBucket/contacts.csv
-    Body: buff,
-    ACL: "public-read"
-  };
-  s3.upload(params, function(s3Err, data) {
-    if (s3Err) throw s3Err;
-    req.body.file001Url = data.Location;
+    //3. หลักการและเหตุผล
 
-    next();
-  });
+    child.push(
+      new Paragraph({
+        children: [
+          new TextRun({
+            text: "3. หลักการและเหตุผล",
+            bold: true
+          })
+        ],
+        style: "format-title"
+      })
+    );
+
+    if (docxData001.criteria)
+      docxData001.criteria.split("<p>").forEach(function(owner) {
+        var txt = owner
+          .replace("\t\t\t", "*")
+          .replace("\t\t", "*")
+          .replace("\t", "*")
+          .replace("&nbsp;&nbsp;&nbsp;&nbsp;", "\t")
+          .replace("</p>", "")
+          .replace("*", "\t\t");
+        console.log(txt);
+        if (txt !== "") {
+          child.push(
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: (txt.startsWith("\t") ? "" : "\t") + txt
+                })
+              ],
+              style: "format-subtitle-normal"
+            })
+          );
+        }
+      });
+
+    //4. วัตถุประสงค์
+    child.push(
+      new Paragraph({
+        children: [
+          new TextRun({
+            text: "4. วัตถุประสงค์",
+            bold: true
+          })
+        ],
+        style: "format-title"
+      })
+    );
+    if (docxData001.objectives)
+      docxData001.objectives.split("<p>").forEach(function(owner) {
+        var txt = owner
+          .replace("\t\t\t", "*")
+          .replace("\t\t", "*")
+          .replace("\t", "*")
+          .replace("&nbsp;&nbsp;&nbsp;&nbsp;", "\t")
+          .replace("</p>", "")
+          .replace("*", " ");
+        if (txt !== "") {
+          child.push(
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: (txt.startsWith("\t") ? "" : "\t") + txt
+                })
+              ],
+              style: "format-subtitle-normal"
+            })
+          );
+        }
+      });
+
+    //5. ความสอดคล้อง/ความสัมพันธ์กับนโยบายรัฐบาล แผนแม่บทชาติ ยุทธศาสตร์การจัดสรรงบประมาณ
+    child.push(
+      new Paragraph({
+        children: [
+          new TextRun({
+            text:
+              "5. ความสอดคล้อง/ความสัมพันธ์กับนโยบายรัฐบาล แผนแม่บทชาติ ยุทธศาสตร์การจัดสรรงบประมาณ",
+            bold: true
+          })
+        ],
+        style: "format-title"
+      })
+    );
+    if (docxData001.relatetostrategyoutside)
+      docxData001.relatetostrategyoutside.split("<p>").forEach(function(owner) {
+        var txt = owner
+          .replace("\t\t\t", "*")
+          .replace("\t\t", "*")
+          .replace("\t", "*")
+          .replace("&nbsp;&nbsp;&nbsp;&nbsp;", "\t")
+          .replace("</p>", "")
+          .replace("*", "\t");
+        if (txt !== "") {
+          child.push(
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: (txt.startsWith("\t") ? "" : "\t") + txt
+                })
+              ],
+              style: "format-subtitle-normal"
+            })
+          );
+        }
+      });
+
+    //6. ความสอดคล้องกับยุทธศาสตร์ เป้าหมายการให้บริการ กลยุทธ์ของสำนักงานทรัพยากรน้ำแห่งชาติ
+    child.push(
+      new Paragraph({
+        children: [
+          new TextRun({
+            text:
+              "6. ความสอดคล้องกับยุทธศาสตร์ เป้าหมายการให้บริการ กลยุทธ์ของสำนักงานทรัพยากรน้ำแห่งชาติ",
+            bold: true
+          })
+        ],
+        style: "format-title"
+      })
+    );
+
+    if (docxData001.relatetostrategyinside)
+      docxData001.relatetostrategyinside.split("<p>").forEach(function(owner) {
+        var txt = owner
+          .replace("\t\t\t", "*")
+          .replace("\t\t", "*")
+          .replace("\t", "*")
+          .replace("&nbsp;&nbsp;&nbsp;&nbsp;", "\t")
+          .replace("</p>", "")
+          .replace("*", "\t");
+        if (txt !== "") {
+          child.push(
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: (txt.startsWith("\t") ? "" : "\t") + txt
+                })
+              ],
+              style: "format-subtitle-normal"
+            })
+          );
+        }
+      });
+
+    //7. พื้นที่ดำเนินโครงการ
+    child.push(
+      new Paragraph({
+        children: [
+          new TextRun({
+            text: "7. พื้นที่ดำเนินโครงการ",
+            bold: true
+          })
+        ],
+        style: "format-title"
+      })
+    );
+    if (docxData001.location)
+      docxData001.location.split("<p>").forEach(function(owner) {
+        var txt = owner
+          .replace("\t\t\t", "*")
+          .replace("\t\t", "*")
+          .replace("\t", "*")
+          .replace("&nbsp;&nbsp;&nbsp;&nbsp;", "\t")
+          .replace("</p>", "")
+          .replace("*", "\t");
+        if (txt !== "") {
+          child.push(
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: (txt.startsWith("\t") ? "" : "\t") + txt
+                })
+              ],
+              style: "format-subtitle-normal"
+            })
+          );
+        }
+      });
+
+    //8. กลุ่มเป้าหมาย ผู้มีส่วนได้ส่วนเสีย
+    child.push(
+      new Paragraph({
+        children: [
+          new TextRun({
+            text: "8. กลุ่มเป้าหมาย ผู้มีส่วนได้ส่วนเสีย",
+            bold: true
+          })
+        ],
+        style: "format-title"
+      })
+    );
+    if (docxData001.targetgroup)
+      docxData001.targetgroup.split("<p>").forEach(function(owner) {
+        var txt = owner
+          .replace("\t\t\t", "*")
+          .replace("\t\t", "*")
+          .replace("\t", "*")
+          .replace("&nbsp;&nbsp;&nbsp;&nbsp;", "\t")
+          .replace("</p>", "")
+          .replace("*", "\t");
+        if (txt !== "") {
+          child.push(
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: (txt.startsWith("\t") ? "" : "\t") + txt
+                })
+              ],
+              style: "format-subtitle-normal"
+            })
+          );
+        }
+      });
+
+    //9. ระยะเวลาดำเนินโครงการ
+    child.push(
+      new Paragraph({
+        children: [
+          new TextRun({
+            text: "9. ระยะเวลาดำเนินโครงการ",
+            bold: true
+          })
+        ],
+        style: "format-title"
+      })
+    );
+    if (docxData001.timeline)
+      docxData001.timeline.split("<p>").forEach(function(owner) {
+        var txt = owner
+          .replace("\t\t\t", "*")
+          .replace("\t\t", "*")
+          .replace("\t", "*")
+          .replace("&nbsp;&nbsp;&nbsp;&nbsp;", "\t")
+          .replace("</p>", "")
+          .replace("*", "\t");
+        if (txt !== "") {
+          child.push(
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: (txt.startsWith("\t") ? "" : "\t") + txt
+                })
+              ],
+              style: "format-subtitle-normal"
+            })
+          );
+        }
+      });
+
+    //10. แผนการปฏิบัติงาน/วิธีการดำเนินงาน/กิจกรรม (โดยละเอียด)
+    child.push(
+      new Paragraph({
+        children: [
+          new TextRun({
+            text: "10. แผนการปฏิบัติงาน/วิธีการดำเนินงาน/กิจกรรม (โดยละเอียด)",
+            bold: true
+          })
+        ],
+        style: "format-title"
+      })
+    );
+    if (docxData001.process)
+      docxData001.process.split("<p>").forEach(function(owner) {
+        var txt = owner
+          .replace("\t\t\t", "*")
+          .replace("\t\t", "*")
+          .replace("\t", "*")
+          .replace("&nbsp;&nbsp;&nbsp;&nbsp;", "\t")
+          .replace("</p>", "")
+          .replace("*", "\t");
+        if (txt !== "") {
+          child.push(
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: (txt.startsWith("\t") ? "" : "\t") + txt
+                })
+              ],
+              style: "format-subtitle-normal"
+            })
+          );
+        }
+      });
+
+    //11. ผลการดำเนินงานที่ผ่านมา (ถ้ามี)
+    child.push(
+      new Paragraph({
+        children: [
+          new TextRun({
+            text: "11. ผลการดำเนินงานที่ผ่านมา (ถ้ามี)",
+            bold: true
+          })
+        ],
+        style: "format-title"
+      })
+    );
+    if (docxData001.resulthistory)
+      docxData001.resulthistory.split("<p>").forEach(function(owner) {
+        var txt = owner
+          .replace("\t\t\t", "*")
+          .replace("\t\t", "*")
+          .replace("\t", "*")
+          .replace("&nbsp;&nbsp;&nbsp;&nbsp;", "\t")
+          .replace("</p>", "")
+          .replace("*", "\t");
+        if (txt !== "") {
+          child.push(
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: (txt.startsWith("\t") ? "" : "\t") + txt
+                })
+              ],
+              style: "format-subtitle-normal"
+            })
+          );
+        }
+      });
+
+    //12. งบประมาณ และแผนการใช้จ่ายงบประมาณ
+    child.push(
+      new Paragraph({
+        children: [
+          new TextRun({
+            text: "12. งบประมาณ และแผนการใช้จ่ายงบประมาณ",
+            bold: true
+          })
+        ],
+        style: "format-title"
+      })
+    );
+    if (docxData001.budgetpaln)
+      docxData001.budgetpaln.split("<p>").forEach(function(owner) {
+        var txt = owner
+          .replace("\t\t\t", "*")
+          .replace("\t\t", "*")
+          .replace("\t", "*")
+          .replace("&nbsp;&nbsp;&nbsp;&nbsp;", "\t")
+          .replace("</p>", "")
+          .replace("*", "\t");
+        if (txt !== "") {
+          child.push(
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: (txt.startsWith("\t") ? "" : "\t") + txt
+                })
+              ],
+              style: "format-subtitle-normal"
+            })
+          );
+        }
+      });
+
+    //13.	ผลผลิตของแผนงาน/โครงการ (Output) และตัวชี้วัดของโครงการ
+    child.push(
+      new Paragraph({
+        children: [
+          new TextRun({
+            text: "13. ผลผลิตของแผนงาน/โครงการ (Output) และตัวชี้วัดของโครงการ",
+            bold: true
+          })
+        ],
+        style: "format-title"
+      })
+    );
+    if (docxData001.output)
+      docxData001.output.split("<p>").forEach(function(owner) {
+        var txt = owner
+          .replace("\t\t\t", "*")
+          .replace("\t\t", "*")
+          .replace("\t", "*")
+          .replace("&nbsp;&nbsp;&nbsp;&nbsp;", "\t")
+          .replace("</p>", "")
+          .replace("*", "\t");
+        if (txt !== "") {
+          child.push(
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: (txt.startsWith("\t") ? "" : "\t") + txt
+                })
+              ],
+              style: "format-subtitle-normal"
+            })
+          );
+        }
+      });
+
+    //14. ผลลัพธ์/ผลสัมฤทธิ์ของแผนงาน/โครงการ (Outcome)
+    child.push(
+      new Paragraph({
+        children: [
+          new TextRun({
+            text: "14. ผลลัพธ์/ผลสัมฤทธิ์ของแผนงาน/โครงการ (Outcome)",
+            bold: true
+          })
+        ],
+        style: "format-title"
+      })
+    );
+    if (docxData001.outcome)
+      docxData001.outcome.split("<p>").forEach(function(owner) {
+        var txt = owner
+          .replace("\t\t\t", "*")
+          .replace("\t\t", "*")
+          .replace("\t", "*")
+          .replace("&nbsp;&nbsp;&nbsp;&nbsp;", "\t")
+          .replace("</p>", "")
+          .replace("*", "\t");
+        if (txt !== "") {
+          child.push(
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: (txt.startsWith("\t") ? "" : "\t") + txt
+                })
+              ],
+              style: "format-subtitle-normal"
+            })
+          );
+        }
+      });
+
+    //15. ผลประโยชน์/ผลกระทบที่คาดว่าจะได้รับ
+    child.push(
+      new Paragraph({
+        children: [
+          new TextRun({
+            text: "15. ผลประโยชน์/ผลกระทบที่คาดว่าจะได้รับ",
+            bold: true
+          })
+        ],
+        style: "format-title"
+      })
+    );
+    if (docxData001.benefit)
+      docxData001.benefit.split("<p>").forEach(function(owner) {
+        var txt = owner
+          .replace("\t\t\t", "*")
+          .replace("\t\t", "*")
+          .replace("\t", "*")
+          .replace("&nbsp;&nbsp;&nbsp;&nbsp;", "\t")
+          .replace("</p>", "")
+          .replace("*", "\t");
+        if (txt !== "") {
+          child.push(
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: (txt.startsWith("\t") ? "" : "\t") + txt
+                })
+              ],
+              style: "format-subtitle-normal"
+            })
+          );
+        }
+      });
+
+    //16. การติดตามและประเมินผลโครงการ
+    child.push(
+      new Paragraph({
+        children: [
+          new TextRun({
+            text: "16. การติดตามและประเมินผลโครงการ",
+            bold: true
+          })
+        ],
+        style: "format-title"
+      })
+    );
+    if (docxData001.indicator)
+      docxData001.indicator.split("<p>").forEach(function(owner) {
+        var txt = owner
+          .replace("\t\t\t", "*")
+          .replace("\t\t", "*")
+          .replace("\t", "*")
+          .replace("&nbsp;&nbsp;&nbsp;&nbsp;", "\t")
+          .replace("</p>", "")
+          .replace("*", "\t");
+        if (txt !== "") {
+          child.push(
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: (txt.startsWith("\t") ? "" : "\t") + txt
+                })
+              ],
+              style: "format-subtitle-normal"
+            })
+          );
+        }
+      });
+
+    child.push(
+      new Paragraph({
+        children: []
+      })
+    );
+    //*****************************************
+    child.push(
+      new Paragraph({
+        children: [
+          new TextRun({
+            text: "*****************************************",
+            bold: true
+          })
+        ],
+        style: "format-title-center"
+      })
+    );
+
+    const doc = new Document({
+      styles: {
+        paragraphStyles: [
+          {
+            id: "heading-end",
+            basedOn: "Normal",
+            next: "Normal",
+            run: {
+              size: 32,
+              bold: true,
+              font: "TH SarabunPSK"
+            },
+            paragraph: {
+              alignment: AlignmentType.END
+            }
+          },
+          {
+            id: "heading-center",
+            basedOn: "Normal",
+            next: "Normal",
+            run: {
+              size: 32,
+              bold: true,
+              font: "TH SarabunPSK"
+            },
+            paragraph: {
+              alignment: AlignmentType.CENTER
+            }
+          },
+          {
+            id: "format-title",
+            basedOn: "Normal",
+            next: "Normal",
+            run: {
+              size: 32,
+              font: "TH SarabunPSK"
+            },
+            paragraph: {
+              alignment: AlignmentType.START
+            }
+          },
+          {
+            id: "format-title-center",
+            basedOn: "Normal",
+            next: "Normal",
+            run: {
+              size: 32,
+              font: "TH SarabunPSK"
+            },
+            paragraph: {
+              alignment: AlignmentType.CENTER
+            }
+          },
+          {
+            id: "format-subtitle",
+            basedOn: "Normal",
+            next: "Normal",
+            run: {
+              size: 32,
+              font: "TH SarabunPSK"
+            },
+            paragraph: {
+              alignment: AlignmentType.START,
+              indent: {
+                left: 900
+              }
+            }
+          },
+          {
+            id: "format-subtitle-normal",
+            basedOn: "Normal",
+            next: "Normal",
+            run: {
+              size: 32,
+              font: "TH SarabunPSK"
+            },
+            paragraph: {
+              alignment: AlignmentType.START
+              // spacing: { line: 76 }
+            }
+          }
+        ]
+      }
+    });
+
+    doc.addSection({
+      headers: {
+        default: new Header({
+          children: [
+            new Paragraph({
+              text: "แบบฟอร์ม กผง.001",
+              style: "heading-end"
+            })
+          ]
+        }),
+        first: new Header({
+          // The first header
+          children: [
+            new Paragraph({
+              text: "แบบฟอร์ม กผง.001",
+              style: "heading-end"
+            })
+          ]
+        }),
+        even: new Header({
+          // The header on every other page
+          children: [
+            new Paragraph({
+              text: PageNumber.CURRENT,
+              style: "heading-center"
+            })
+          ]
+        })
+      },
+      children: child
+    });
+
+    const documentBuffer = await Packer.toBase64String(doc);
+    let buff = new Buffer(documentBuffer, "base64");
+    // var date1 = Date.now();
+    var uuid1 = new Date().getTime();
+
+    const params = {
+      Bucket: "test-001-01", // pass your bucket name
+      Key: "กผง-001-" + uuid1 + ".doc", // file will be saved as testBucket/contacts.csv
+      Body: buff,
+      ACL: "public-read"
+    };
+    s3.upload(params, function(s3Err, data) {
+      if (s3Err) throw s3Err;
+      req.body.file001Url = data.Location;
+
+      next();
+    });
+  }
 };
+
 exports.createFile003AndUpload = async function(req, res, next) {
   // console.log(req.body);
   var docxData003 = req.body;
-  const doc = new Document();
-  doc.addSection({
-    // properties: {},
-    headers: {
-      default: new Header({
-        children: [
-          // new Paragraph(image1),
+  const doc = new Document({
+    styles: {
+      paragraphStyles: [
+        {
+          id: "heading-end",
+          basedOn: "Normal",
+          next: "Normal",
+          run: {
+            size: 32,
+            bold: true,
+            font: "TH SarabunPSK"
+          },
+          paragraph: {
+            alignment: AlignmentType.END
+          }
+        },
+        {
+          id: "heading-center",
+          basedOn: "Normal",
+          next: "Normal",
+          run: {
+            size: 32,
+            bold: true,
+            font: "TH SarabunPSK"
+          },
+          paragraph: {
+            alignment: AlignmentType.CENTER
+          }
+        },
+        {
+          id: "format-title",
+          basedOn: "Normal",
+          next: "Normal",
+          run: {
+            size: 32,
+            font: "TH SarabunPSK"
+          },
+          paragraph: {
+            alignment: AlignmentType.START
+          }
+        },
+        {
+          id: "format-title-center",
+          basedOn: "Normal",
+          next: "Normal",
+          run: {
+            size: 32,
+            font: "TH SarabunPSK"
+          },
+          paragraph: {
+            alignment: AlignmentType.CENTER
+          }
+        },
+        {
+          id: "format-title-end",
+          basedOn: "Normal",
+          next: "Normal",
+          run: {
+            size: 32,
+            font: "TH SarabunPSK"
+          },
+          paragraph: {
+            alignment: AlignmentType.END
+          }
+        },
+        {
+          id: "format-subtitle",
+          basedOn: "Normal",
+          next: "Normal",
+          run: {
+            size: 32,
+            font: "TH SarabunPSK"
+          },
+          paragraph: {
+            alignment: AlignmentType.START,
+            indent: {
+              left: 900
+            }
+          }
+        },
+        {
+          id: "format-subtitle-normal",
+          basedOn: "Normal",
+          next: "Normal",
+          run: {
+            size: 32,
+            font: "TH SarabunPSK"
+          },
+          paragraph: {
+            alignment: AlignmentType.START
+            // spacing: { line: 76 }
+          }
+        }
+      ]
+    }
+  });
+
+  const child = [];
+  child.push(
+    new Paragraph({
+      text: "แบบประมาณการ",
+      style: "heading-center"
+    })
+  );
+
+  child.push(
+    new Paragraph({
+      children: []
+    })
+  );
+
+  child.push(
+    new Paragraph({
+      children: [
+        new TextRun({
+          text: "หน่วยงาน  ",
+          bold: true
+        }),
+        new TextRun({
+          text: "ชื่อหน่วยงาน"
+        })
+      ],
+      style: "format-title"
+    })
+  );
+
+  child.push(
+    new Paragraph({
+      children: [
+        new TextRun({
+          text: "กลุ่ม/ฝ่าย  ",
+          bold: true
+        }),
+        new TextRun({
+          text: "ชื่อกลุ่ม/ฝ่าย"
+        })
+      ],
+      style: "format-title"
+    })
+  );
+
+  child.push(
+    new Paragraph({
+      children: [
+        new TextRun({
+          text: "รายการ  ",
+          bold: true
+        }),
+        new TextRun({
+          text: `${docxData003.name}`
+        })
+      ],
+      style: "format-title"
+    })
+  );
+
+  child.push(
+    new Paragraph({
+      children: [
+        new TextRun({
+          text: "แผนงาน  ",
+          bold: true
+        }),
+        new TextRun({
+          text: `${docxData003.planname}`
+        })
+      ],
+      style: "format-title"
+    })
+  );
+
+  child.push(
+    new Paragraph({
+      children: [
+        new TextRun({
+          text: "ผลผลิต/โครงการ ",
+          bold: true
+        }),
+        new TextRun({
+          text: `${docxData003.projectname}`
+        })
+      ],
+      style: "format-title"
+    })
+  );
+
+  child.push(
+    new Paragraph({
+      children: [
+        new TextRun({
+          text: "กิจกรรม ",
+          bold: true
+        }),
+        new TextRun({
+          text: `${docxData003.activityname}`
+        })
+      ],
+      style: "format-title"
+    })
+  );
+
+  child.push(
+    new Paragraph({
+      children: [
+        new TextRun({
+          text: "ประเภทรายจ่าย ",
+          bold: true
+        }),
+        new TextRun({
+          text: `${docxData003.sourcename}`
+        })
+      ],
+      style: "format-title"
+    })
+  );
+
+  child.push(
+    new Paragraph({
+      children: [
+        new TextRun({
+          text: "รวมเงิน ",
+          bold: true
+        }),
+        new TextRun({
+          text: `${docxData003.budgetsummary}`
+        })
+      ],
+      style: "format-title"
+    })
+  );
+
+  child.push(
+    new Paragraph({
+      children: [
+        new TextRun({
+          text:
+            "-------------------------------------------------------------------------------",
+          bold: true
+        })
+      ],
+      style: "format-title-center"
+    })
+  );
+
+  child.push(
+    new Paragraph({
+      text: "คำชี้แจง",
+      style: "heading-center"
+    })
+  );
+
+  //เรียน ลทช. ผ่าน ผอ.ศอน.
+  child.push(
+    new Paragraph({
+      children: [
+        new TextRun({
+          text: `เรียน ลทช. ผ่าน ผอ.ศอน.`
+        })
+      ],
+      style: "format-title"
+    })
+  );
+
+  //ประมาณการฉบับนี้ตั้งขึ้นเพื่อควบคุมค่าใช้จ่ายใน โครงการโครงการจัดทำผังน้ำ ลุ่มน้ำชี
+  child.push(
+    new Paragraph({
+      children: [
+        new TextRun({
+          text: `\tประมาณการฉบับนี้ตั้งขึ้นเพื่อควบคุมค่าใช้จ่ายใน${docxData003.name} `
+        })
+      ],
+      style: "format-title"
+    })
+  );
+  child.push(
+    new Paragraph({
+      children: [
+        new TextRun({
+          text: `วัตถุประสงค์`
+          // bold: true
+        })
+      ],
+      style: "format-title"
+    })
+  );
+
+  if (docxData003.objectives)
+    docxData003.objectives.split("<p>").forEach(function(owner) {
+      var txt = owner
+        .replace("\t\t\t", "*")
+        .replace("\t\t", "*")
+        .replace("\t", "*")
+        .replace("&nbsp;&nbsp;&nbsp;&nbsp;", "\t")
+        .replace("</p>", "")
+        .replace("*", "\t\t");
+      console.log(txt);
+      if (txt !== "") {
+        child.push(
           new Paragraph({
             children: [
               new TextRun({
-                text: "\t\t\t\t\t\tแบบประมาณการ",
-                bold: true
+                text: (txt.startsWith("\t") ? "" : "\t") + txt
               })
-            ]
+            ],
+            style: "format-subtitle-normal"
           })
-        ]
-      })
-    },
-    children: [
-      new Paragraph({
-        children: [
-          new TextRun({
-            text: "หน่วยงาน\t",
-            bold: true
-          }),
-          new TextRun({
-            text: docxData003.deptname,
-            bold: true
+        );
+      }
+    });
+
+  child.push(
+    new Paragraph({
+      children: []
+    })
+  );
+  //ดังนั้น เพื่อให้การดำเนินงานบรรลุตามวัตุประสงค์ที่วางไว้ จึงขอ ทั้งสิ้น 5000000 ตามรายละเอียด
+  child.push(
+    new Paragraph({
+      children: [
+        new TextRun({
+          text:
+            "\tดังนั้น เพื่อให้การดำเนินงานบรรลุตามวัตุประสงค์ที่วางไว้ จึงขออนุมัติใช้งบประมาณเป็นเงิน"
+        })
+      ],
+      style: "format-title"
+    })
+  );
+
+  child.push(
+    new Paragraph({
+      children: [
+        new TextRun({
+          text: `ทั้งสิ้น ${docxData003.budgetinyear} บาท(....................ตัวอักษร....................) เพื่อดำเนินงานในปี ${docxData003.budgetyear}`
+        })
+      ],
+      style: "format-title"
+    })
+  );
+
+  //ตามรายละเอียดแนบท้ายนี้
+  child.push(
+    new Paragraph({
+      children: [
+        new TextRun({
+          text: "ตามรายละเอียดแนบท้ายนี้"
+        })
+      ],
+      style: "format-title"
+    })
+  );
+
+  //จึงเรียนมาเพื่อโปรดพิจารณาอนุมัติ
+  child.push(
+    new Paragraph({
+      children: [
+        new TextRun({
+          text: "\tจึงเรียนมาเพื่อโปรดพิจารณาอนุมัติ"
+        })
+      ],
+      style: "format-title"
+    })
+  );
+  child.push(
+    new Paragraph({
+      children: []
+    })
+  );
+  child.push(
+    new Paragraph({
+      children: []
+    })
+  );
+  //(ชื่อ-สกุล....(ผู้จัดทำประมาณการ)......)
+  // child.push(
+  //   new Paragraph({
+  //     children: [
+  //       new TextRun({
+  //         text: "(ชื่อ-สกุล....(ผู้จัดทำประมาณการ)......)"
+  //       })
+  //     ],
+  //     style: "format-title-end"
+  //   })
+  // );
+  if (docxData003.owner)
+    docxData003.owner.split("<p>").forEach(function(owner) {
+      var txt = owner
+        .replace("\t\t\t", "*")
+        .replace("\t\t", "*")
+        .replace("\t", "*")
+        .replace("&nbsp;&nbsp;&nbsp;&nbsp;", "\t")
+        .replace(" &nbsp;", "")
+        .replace("</p>", "")
+        .replace("*", "\t\t");
+      console.log(txt);
+      if (txt !== "") {
+        child.push(
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: txt
+              })
+            ],
+            style: "format-title-end"
           })
-        ]
-      }),
-      new Paragraph({
-        children: [
-          new TextRun({
-            text: "กลุ่ม/ฝ่าย\t",
-            bold: true
-          }),
-          new TextRun({
-            text: docxData003.groupname,
-            bold: true
-          })
-        ]
-      }),
-      new Paragraph({
-        children: [
-          new TextRun({
-            text: "รายการ\t",
-            bold: true
-          }),
-          new TextRun({
-            text: docxData003.name,
-            bold: true
-          })
-        ]
-      }),
-      new Paragraph({
-        children: [
-          new TextRun({
-            text: "แผนงาน\t",
-            bold: true
-          }),
-          new TextRun({
-            text: docxData003.planname,
-            bold: true
-          })
-        ]
-      }),
-      new Paragraph({
-        children: [
-          new TextRun({
-            text: "ผลผลิต/โครงการ โครงการที่ 1\t",
-            bold: true
-          }),
-          new TextRun({
-            text: docxData003.projectname,
-            bold: true
-          })
-        ]
-      }),
-      new Paragraph({
-        children: [
-          new TextRun({
-            text: "กิจกรรม กิจกรรมที่ 1.1\t",
-            bold: true
-          }),
-          new TextRun({
-            text: docxData003.activityname,
-            bold: true
-          })
-        ]
-      }),
-      new Paragraph({
-        children: [
-          new TextRun({
-            text: "ประเภทรายจ่าย\t",
-            bold: true
-          }),
-          new TextRun({
-            text: docxData003.sourcename,
-            bold: true
-          })
-        ]
-      }),
-      new Paragraph({
-        children: [
-          new TextRun({
-            text: "รวมเงิน\t",
-            bold: true
-          }),
-          new TextRun({
-            text: docxData003.budgetsummary,
-            bold: true
-          })
-        ]
-      }),
-      // new Paragraph({
-      //   children: [new TextRun(docxData003.budgetsummarytext)]
-      // }),
-      new Paragraph({
-        children: [
-          new TextRun(
-            "\t\t\t--------------------------------------------------------------"
-          )
-        ]
-      }),
-      new Paragraph({
-        children: [
-          new TextRun({
-            text: "\t\t\t\t\t\tคำชี้แจง",
-            bold: true
-          })
-        ]
-      }),
-      new Paragraph({
-        children: [new TextRun("เรียน ลทช. ผ่าน ผอ.ศอน.")]
-      }),
-      new Paragraph({
-        children: [
-          // new TextRun("\tประมาณการฉบับนี้ตั้งขึ้นเพื่อควบคุมค่าใช้จ่ายในโครงการขับเคลื่อนนโยบาย และแผนแม่บทด้านการบริหารจัดการน้ำ"),
-          new TextRun({
-            text: "\tประมาณการฉบับนี้ตั้งขึ้นเพื่อควบคุมค่าใช้จ่ายใน โครงการ"
-          }),
-          new TextRun({
-            text: docxData003.name
-          })
-        ]
-      }),
-      new Paragraph({
-        children: [
-          new TextRun(
-            "\tตามพระราชบัญญัติทรัพยากรน้ำ พ.ศ. 2561 กำหนดให้สำนักงานมีการจัดทำ 'ผังน้ำ' เพื่อเสนอให้กับคณะกรรมการทรัพยากรน้ำแห่งชาติ ภายในวันดังกล่าว"
-          )
-        ]
-      }),
-      new Paragraph({
-        children: [
-          // new TextRun("\tดังนั้น เพื่อให้การดำเนินงานบรรลุตามวัตุประสงค์ที่วางไว้ จึงขอ ทั้งสิ้น 55,278,300 บาท ( ห้าสิบห้าล้านสองแสนเจ็ดหมื่นแปดพันสามร้อยบาทถ้วน ) ตามรายละเอียด"),
-          new TextRun({
-            text:
-              "\tดังนั้น เพื่อให้การดำเนินงานบรรลุตามวัตุประสงค์ที่วางไว้ จึงขอ ทั้งสิ้น "
-          }),
-          new TextRun({
-            text: docxData003.budgetsummary
-          }),
-          new TextRun({
-            text: docxData003.budgetsummarytext
-          }),
-          new TextRun({
-            text: "\tตามรายละเอียด"
-          })
-        ]
-      }),
-      new Paragraph({
-        children: [new TextRun("\t\t\tจึงเรียนมาเพื่อโปรดพิจารณาอนุมัติ")]
-      }),
-      new Paragraph({
-        children: []
-      }),
-      new Paragraph({
-        children: []
-      }),
-      new Paragraph({
-        children: []
-      }),
-      new Paragraph({
-        children: [new TextRun(docxData003.owner)]
-      }),
-      new Paragraph({
-        children: [
-          new TextRun(
-            "\t\t\t\t\t\t\t\t\tผู้อำนวยการกลุ่มวิเคราะห์และติดตามสถาน"
-          )
-        ]
-      }),
-      new Paragraph({
-        children: []
-      }),
-      new Paragraph({
-        children: []
-      }),
-      new Paragraph({
-        children: []
-      }),
-      new Paragraph({
-        children: [
-          new TextRun({
-            text: "\t\t\t  ผ่าน",
-            bold: true
-          }),
-          new TextRun({
-            text: "\t\t\t\t\t   อนุมัติ",
-            bold: true
-          })
-        ]
-      }),
-      new Paragraph({
-        children: []
-      }),
-      new Paragraph({
-        children: []
-      }),
-      new Paragraph({
-        children: []
-      }),
-      new Paragraph({
-        children: [
-          new TextRun({
-            text: "\t\t      (นาย อุทัย เตียนพลกรัง)",
-            bold: true
-          }),
-          new TextRun({
-            text: "\t\t\t      (นาย สมเกียรติ ประจำวงษ์)",
-            bold: true
-          })
-        ]
-      }),
-      new Paragraph({
-        children: [
-          new TextRun({
-            text: "\t\tผู้อำนวยการศูนย์อำนวยการน้ำแห่งชาติ",
-            bold: true
-          }),
-          new TextRun({
-            text: "\t\t\tเลขาธิการสำนักงานทรัพยากรน้ำแห่งชาติ",
-            bold: true
-          })
-        ]
-      })
-    ]
+        );
+      }
+    });
+
+  child.push(
+    new Paragraph({
+      children: []
+    })
+  );
+  child.push(
+    new Paragraph({
+      children: []
+    })
+  );
+  child.push(
+    new Paragraph({
+      children: [
+        new TextRun({
+          text: "\t\tผ่าน\t\t\t\t\t\tอนุมัติ"
+        })
+      ],
+      style: "format-title"
+    })
+  );
+  child.push(
+    new Paragraph({
+      children: []
+    })
+  );
+  child.push(
+    new Paragraph({
+      children: []
+    })
+  );
+  child.push(
+    new Paragraph({
+      children: [
+        new TextRun({
+          text:
+            "(ชื่อ-สกุล.....(ผู้บังคับบัญชา)........)\t\t\t\t(นายสมเกียรติ ประจำวงค์)"
+        })
+      ],
+      style: "format-title"
+    })
+  );
+
+  //ตำแหน่ง........................
+  child.push(
+    new Paragraph({
+      children: [
+        new TextRun({
+          text: "ตำแหน่ง........................\t\t\t\t\t\tลทช"
+        })
+      ],
+      style: "format-title"
+    })
+  );
+  doc.addSection({
+    children: child
   });
   const documentBuffer = await Packer.toBase64String(doc);
   let buff = new Buffer(documentBuffer, "base64");

@@ -39,7 +39,10 @@ var ProposalSchema = new Schema({
       outcome: String,
       benefit: String,
       indicator: String,
-      status: String,
+      status: {
+        type:String,
+        default: "initial"
+      },
       activities: [
         {
           name: String,
