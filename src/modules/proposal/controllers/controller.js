@@ -191,8 +191,8 @@ exports.upload = function(req, res) {
           });
         }
         var topics = text
-          .replace("1. ชื่อโครงการ : ", ";")
-          .replace("2. ผู้รับผิดชอบ : ", ";")
+          .replace("1. ชื่อโครงการ :", ";")
+          .replace("2. ผู้รับผิดชอบ :", ";")
           .replace("3. หลักการและเหตุผล", ";")
           .replace("4. วัตถุประสงค์", ";")
           .replace(
