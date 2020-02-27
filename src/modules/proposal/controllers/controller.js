@@ -174,7 +174,12 @@ exports.upload = function(req, res) {
       ACL: "public-read"
     };
     s3.upload(params, function(s3Err, data) {
-      if (s3Err) throw s3Err;
+      if (s3Err) {
+        return res.status(400).send({
+          status: 400,
+          message: s3Err
+        });
+      }
       textract.fromFileWithPath(path, { preserveLineBreaks: true }, function(
         error,
         text
