@@ -29,10 +29,10 @@ const cloudinary = require("../../../config/cloudinary").cloudinary;
 
 const AWS = require("aws-sdk");
 const s3 = new AWS.S3({
-  accessKeyId: process.env.AWS_ACCESS_KEY || "AKIAIXFJDIEMNFVWOBAA",
+  accessKeyId: process.env.AWS_ACCESS_KEY || "AKIAID5AG5DL27XFHMPA",
   secretAccessKey:
     process.env.AWS_SECRET_ACCESS_KEY ||
-    "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"
+    "HKcA0VyrcG7H22SzPRkK+p/jEJg9IPOh3ZhGwuk/"
 });
 
 const WordExtractor = require("word-extractor");
