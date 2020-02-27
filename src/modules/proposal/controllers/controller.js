@@ -187,7 +187,7 @@ exports.upload = function(req, res) {
         if(error){
           return res.status(400).send({
             status: 400,
-            message: error
+            message: JSON.stringify(error)
           });
         }
         var topics = text
