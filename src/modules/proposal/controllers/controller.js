@@ -184,6 +184,12 @@ exports.upload = function(req, res) {
         error,
         text
       ) {
+        if(error){
+          return res.status(400).send({
+            status: 400,
+            message: error
+          });
+        }
         var topics = text
           .replace("1. ชื่อโครงการ : ", ";")
           .replace("2. ผู้รับผิดชอบ : ", ";")
