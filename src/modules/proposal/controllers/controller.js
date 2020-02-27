@@ -190,6 +190,7 @@ exports.upload = function(req, res) {
             message: JSON.stringify(error)
           });
         }
+        
         var topics = text
           .replace("1. ชื่อโครงการ :", ";")
           .replace("2. ผู้รับผิดชอบ :", ";")
