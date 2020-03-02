@@ -29,10 +29,10 @@ const cloudinary = require("../../../config/cloudinary").cloudinary;
 
 const AWS = require("aws-sdk");
 const s3 = new AWS.S3({
-  accessKeyId: process.env.AWS_ACCESS_KEY || "AKIAID5AG5DL27XFHMPA",
+  accessKeyId: process.env.AWS_ACCESS_KEY || "AKIAZND2HCJK4TIT3D5I",
   secretAccessKey:
     process.env.AWS_SECRET_ACCESS_KEY ||
-    "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"
+    "yLnziV1g3kHAeBpweqJutJMK1gFeiwbDTgMI4Ld7"
 });
 
 const WordExtractor = require("word-extractor");
@@ -184,13 +184,13 @@ exports.upload = function(req, res) {
         error,
         text
       ) {
-        if(error){
+        if (error) {
           return res.status(400).send({
             status: 400,
             message: JSON.stringify(error)
           });
         }
-        
+
         var topics = text
           .replace("1. ชื่อโครงการ :", ";")
           .replace("2. ผู้รับผิดชอบ :", ";")
@@ -214,11 +214,13 @@ exports.upload = function(req, res) {
           .replace("11. ผลการดำเนินงานที่ผ่านมา (ถ้ามี)", ";")
           .replace("12. งบประมาณ และแผนการใช้จ่ายงบประมาณ", ";")
           .replace(
-            "13. ผลผลิตของแผนงาน/โครงการ (Output) และตัวชี้วัดของโครงการ\n",
+            "13. ผลผลิตของแผนงาน/โครงการ (Output) และตัวชี้วัดของโครงการ",
             ";"
           )
           .replace("14. ผลลัพธ์/ผลสัมฤทธิ์ของแผนงาน/โครงการ (Outcome)", ";")
+          .replace("14. ผลลัพธ์ของแผนงาน/โครงการ (Outcome)", ";")
           .replace("15. ผลประโยชน์/ผลกระทบที่คาดว่าจะได้รับ", ";")
+          .replace("15. ผลประโยชน์ที่คาดว่าจะได้รับ", ";")
           .replace("16. การติดตามและประเมินผลโครงการ", ";")
           .replace("*****************************************", ";")
           .split(";");
